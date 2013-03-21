@@ -1,0 +1,5 @@
+<FindBugsFilter>
+	<Match>
+		<Package name="com.sinofool.dbpool.protoc" />
+	</Match>
+</FindBugsFilter>

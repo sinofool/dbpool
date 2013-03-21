@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<pool>
+	<instance name="user">
+		<server type="mysql">
+			<host>127.0.0.1</host>
+			<port>3306</port>
+			<user>nfsmw</user>
+			<pass>Passw0rd</pass>
+			<core>1</core>
+			<max>50</max>
+			<idle>60</idle>
+			<expression>user.*</expression>
+			<weight>100</weight>
+			<access>r</access>
+		</server>
+		<server type="mysql">
+			<host>127.0.0.1</host>
+			<port>3306</port>
+			<user>nfsmw</user>
+			<pass>Passw0rd</pass>
+			<coreSize>1</coreSize>
+			<maxSize>50</maxSize>
+			<idleTimeSeconds>60</idleTimeSeconds>
+			<expression>user.*</expression>
+			<weight>100</weight>
+			<access>rw</access>
+		</server>
+	</instance>
+</pool>
