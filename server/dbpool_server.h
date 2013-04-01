@@ -1,9 +1,11 @@
 #include "dbpool.h"
 #include <IceXML/Parser.h>
+#include <IceUtil/RecMutex.h>
 
 namespace net {
 namespace sinofool {
 namespace dbpool {
+
 
 class DBConfigHandler: virtual public IceXML::Handler {
 public:
@@ -19,8 +21,10 @@ public:
 		return _data;
 	}
 private:
-	 std::string findAttr(const IceXML::Attributes& attr, const std::string& key);
-	 int findAttrAsInt(const IceXML::Attributes& attr, const std::string& key, int def);
+	std::string findAttr(const IceXML::Attributes& attr,
+			const std::string& key);
+	int findAttrAsInt(const IceXML::Attributes& attr, const std::string& key,
+			int def);
 	inline int str2int(const std::string& str, int def);
 
 	idl::DBInstanceDict _data;
@@ -35,9 +39,13 @@ public:
 	DBPoolServerI();
 	virtual idl::DBInstanceDict getDBInstanceDict(const Ice::Current&);
 	virtual bool reload(const Ice::Current&);
+	virtual bool registerClient(const idl::DBPoolClientPrx&, const Ice::Current&);
 private:
 	bool _reload();
 	idl::DBInstanceDict _data;
+	IceUtil::Mutex _mutex_data;
+	IceUtil::Mutex _mutex_clients;
+	std::set<idl::DBPoolClientPrx> _clients;
 };
 typedef IceUtil::Handle<DBPoolServerI> DBPoolServerIPtr;
 }

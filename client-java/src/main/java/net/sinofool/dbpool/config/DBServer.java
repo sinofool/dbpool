@@ -12,10 +12,28 @@ public class DBServer {
     int coreSize;
     int maxSize;
     int idleTimeSeconds;
-    
+
     String expression;
     int weight;
     int access;
+
+    public int checksum() {
+        StringBuffer buff = new StringBuffer();
+        buff.append(driver);
+        buff.append(host);
+        buff.append(port);
+        buff.append(db);
+        buff.append(user);
+        buff.append(pass);
+        buff.append(coreSize);
+        buff.append(maxSize);
+        buff.append(idleTimeSeconds);
+        buff.append(expression);
+        buff.append(weight);
+        buff.append(access);
+
+        return buff.toString().hashCode();
+    }
 
     /**
      * @param args

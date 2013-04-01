@@ -2,10 +2,10 @@ package net.sinofool.dbpool.config;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 
-import net.sinofool.dbpool.DbPool;
-
+import net.sinofool.dbpool.DBPool;
 
 public class DBInstance {
 
@@ -16,22 +16,29 @@ public class DBInstance {
     private int access(String acc) {
         // TODO: needs more
         if (acc.equalsIgnoreCase("rw")) {
-            return DbPool.WRITE_ACCESS | DbPool.READ_ACCESS;
+            return DBPool.WRITE_ACCESS | DBPool.READ_ACCESS;
         }
         if (acc.equalsIgnoreCase("r")) {
-            return DbPool.READ_ACCESS;
+            return DBPool.READ_ACCESS;
         }
         if (acc.equalsIgnoreCase("w")) {
-            return DbPool.WRITE_ACCESS;
+            return DBPool.WRITE_ACCESS;
         }
         return 0;
     }
 
-    public synchronized boolean reloadConfig(net.sinofool.dbpool.idl.DBServer[] sers) {
+    private String driver(String type) {
+        if (type.equals("mysql")) {
+            return "com.mysql.jdbc.Driver";
+        }
+        return type;
+    }
+
+    public synchronized List<DBServer> reloadConfig(net.sinofool.dbpool.idl.DBServer[] sers) {
         ArrayList<DBServer> newServers = new ArrayList<DBServer>();
         for (net.sinofool.dbpool.idl.DBServer ser : sers) {
             DBServer dbs = new DBServer();
-            dbs.driver = ser.type;
+            dbs.driver = driver(ser.type);
             dbs.host = ser.host;
             dbs.port = ser.port;
             dbs.db = ser.db;
@@ -48,15 +55,30 @@ public class DBInstance {
 
             newServers.add(dbs);
         }
+
+        ArrayList<DBServer> changes;
+        do {
+            if (servers.size() != newServers.size()) {
+                changes = servers;
+                break;
+            }
+            changes = new ArrayList<DBServer>();
+            for (int i = 0; i < servers.size(); ++i) {
+                if (servers.get(i).checksum() != newServers.get(i).checksum()) {
+                    changes.add(servers.get(i));
+                }
+            }
+        } while (false);
+
         servers = newServers;
-        return true;
+        return changes;
     }
 
     public DBServer getDbServer(int access, String pattern) {
         LinkedList<DBServer> candidate = new LinkedList<DBServer>();
         int totalWeight = 0;
         for (DBServer entry : servers) {
-            if ((entry.access | access) == 0) {
+            if ((entry.access & access) == 0) {
                 continue;
             }
             candidate.add(entry);

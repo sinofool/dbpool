@@ -20,9 +20,15 @@ module idl {
 	};
 	sequence<DBServer> DBInstance;
 	dictionary<string, DBInstance> DBInstanceDict;
+
+	interface DBPoolClient {
+		bool pushDBInstanceDict(DBInstanceDict dict);
+	};
+
 	interface DBPoolServer {
 		DBInstanceDict getDBInstanceDict();
 		bool reload();
+		bool registerClient(DBPoolClient* client);
 	};
 
 };

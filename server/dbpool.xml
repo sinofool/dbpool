@@ -2,28 +2,44 @@
 <pool>
 	<instance name="user">
 		<server type="mysql">
-			<host>127.0.0.1</host>
+			<host>10.88.73.52</host>
 			<port>3306</port>
-			<user>nfsmw</user>
-			<pass>Passw0rd</pass>
+			<user>user1</user>
+			<pass>pass1</pass>
 			<core>1</core>
 			<max>50</max>
 			<idle>60</idle>
 			<expression>user.*</expression>
 			<weight>100</weight>
-			<access>r</access>
+			<access>w</access>
 		</server>
 		<server type="mysql">
-			<host>127.0.0.1</host>
+			<host>10.88.73.52</host>
 			<port>3306</port>
-			<user>nfsmw</user>
-			<pass>Passw0rd</pass>
+			<user>user2</user>
+			<pass>pass2</pass>
 			<coreSize>1</coreSize>
 			<maxSize>50</maxSize>
 			<idleTimeSeconds>60</idleTimeSeconds>
 			<expression>user.*</expression>
 			<weight>100</weight>
-			<access>rw</access>
+			<access>r</access>
+		</server>
+		<server type="mysql" host="10.88.73.52" port="3306" user="user3" pass="pass3">
+			<coreSize>1</coreSize>
+			<maxSize>50</maxSize>
+			<idleTimeSeconds>60</idleTimeSeconds>
+			<expression>user.*</expression>
+			<weight>100</weight>
+			<access>r</access>
+		</server>
+		<server type="mysql" host="10.88.73.52" port="3306" user="user4" pass="pass4">
+			<coreSize>1</coreSize>
+			<maxSize>50</maxSize>
+			<idleTimeSeconds>60</idleTimeSeconds>
+			<expression>user.*</expression>
+			<weight>100</weight>
+			<access>r</access>
 		</server>
 	</instance>
 </pool>

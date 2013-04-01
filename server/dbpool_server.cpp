@@ -1,4 +1,5 @@
 #include "dbpool_server.h"
+#include "log.h"
 #include <sstream>
 
 namespace net {
@@ -7,16 +8,15 @@ namespace dbpool {
 
 void DBConfigHandler::startElement(const std::string& name,
 		const IceXML::Attributes& attr, int line, int column) {
-	std::cout << "(Line: " << line << " Column: " << column << ")\t"
-			<< "StartElement " << name;
+	DBPOOLLOG_DEBUG(
+			"(Line: " << line << " Column: " << column << ")\t" << "StartElement " << name);
 	for (IceXML::Attributes::const_iterator it = attr.begin(); it != attr.end();
 			++it) {
-		std::cout << "\t" << it->first << "=" << it->second;
+		DBPOOLLOG_DEBUG("\t" << it->first << "=" << it->second);
 	}
-	std::cout << std::endl;
 
 	if (name == "pool") {
-		std::cout << "START" << std::endl;
+		DBPOOLLOG_DEBUG("START");
 	} else if (name == "instance") {
 		std::string name = findAttr(attr, "name");
 		idl::DBInstance ins;
@@ -41,9 +41,7 @@ void DBConfigHandler::startElement(const std::string& name,
 		ser.expression = findAttr(attr, "expression");
 		ser.weight = findAttrAsInt(attr, "weight", 100);
 		ser.access = findAttr(attr, "access");
-		std::cout << "Start Step 1 " << _current_instance << std::endl;
 		_current_instance->push_back(ser);
-		std::cout << "Start Step 2" << std::endl;
 		_current_server = _current_instance->data()
 				+ (_current_instance->size() - 1);
 	} else if (name == "host") {
@@ -77,12 +75,14 @@ void DBConfigHandler::startElement(const std::string& name,
 		_current_value.str("");
 		_current_value.clear();
 	}
-	std::cout << "StartEnd" << std::endl;
 }
 
-void DBConfigHandler::endElement(const std::string& name, int line, int column) {
+void DBConfigHandler::endElement(const std::string& name, int line,
+		int column) {
+	DBPOOLLOG_DEBUG(
+			"(Line: " << line << " Column: " << column << ")\t" << "EndElement " << name);
 	if (name == "pool") {
-		std::cout << "ALL.DONE." << std::endl;
+		DBPOOLLOG_DEBUG("ALL.DONE.");
 	} else if (name == "instance") {
 		_current_instance = NULL;
 	} else if (name == "server") {
@@ -108,19 +108,18 @@ void DBConfigHandler::endElement(const std::string& name, int line, int column) 
 	} else if (name == "access") {
 		_current_server->access = _current_value.str();
 	}
-	std::cout << "(Line: " << line << " Column: " << column << ")\t"
-			<< "EndElement " << name << std::endl;
 }
 
-void DBConfigHandler::characters(const std::string& name, int line, int column) {
+void DBConfigHandler::characters(const std::string& name, int line,
+		int column) {
+	DBPOOLLOG_DEBUG(
+			"(Line: " << line << " Column: " << column << ")\t" << "Characters " << name);
 	_current_value << name;
-	std::cout << "(Line: " << line << " Column: " << column << ")\t"
-			<< "Characters " << name << std::endl;
 }
 
 std::string DBConfigHandler::findAttr(const IceXML::Attributes& attr,
 		const std::string& key) {
-	std::cout << "Finding " << key << std::endl;
+	DBPOOLLOG_DEBUG("Finding " << key);
 	IceXML::Attributes::const_iterator it = attr.find(key);
 	if (it == attr.end()) {
 		return "";
@@ -151,6 +150,7 @@ DBPoolServerI::DBPoolServerI() {
 }
 
 idl::DBInstanceDict DBPoolServerI::getDBInstanceDict(const Ice::Current&) {
+	IceUtil::Mutex::Lock lock(_mutex_data);
 	return _data;
 }
 
@@ -161,10 +161,40 @@ bool DBPoolServerI::reload(const Ice::Current&) {
 bool DBPoolServerI::_reload() {
 	DBConfigHandler handle;
 	IceXML::Parser::parse("dbpool.xml", handle);
-	_data = handle.getDBInstanceDict();
+	idl::DBInstanceDict data = handle.getDBInstanceDict();
+	{
+		IceUtil::Mutex::Lock lock(_mutex_data);
+		_data = data;
+	}
+
+	std::set<idl::DBPoolClientPrx> clients;
+	{
+		IceUtil::Mutex::Lock lock(_mutex_clients);
+		clients = _clients;
+	}
+	for (std::set<idl::DBPoolClientPrx>::iterator it = clients.begin();
+			it != clients.end(); ++it) {
+		try {
+			(*it)->pushDBInstanceDict(data);
+			DBPOOLLOG_DEBUG("Pushed to " << (*it));
+		} catch (...) {
+			IceUtil::Mutex::Lock lock(_mutex_clients);
+			_clients.erase(*it);
+			DBPOOLLOG_DEBUG(
+					"Error push to " << (*it) << ". Current have " << _clients.size() << " clients.");
+		}
+	}
 	return true;
 }
 
+bool DBPoolServerI::registerClient(const idl::DBPoolClientPrx& client,
+		const Ice::Current&) {
+	IceUtil::Mutex::Lock lock(_mutex_clients);
+	_clients.insert(client);
+	DBPOOLLOG_DEBUG(
+			"Client registered " << client << " current have " << _clients.size() << " clients.");
+	return true;
+}
 }
 }
 }

@@ -1,14 +1,13 @@
 package net.sinofool.dbpool.config;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import net.sinofool.dbpool.idl.DBPoolServerPrx;
-import net.sinofool.dbpool.idl.DBPoolServerPrxHelper;
-
 public class DBConfig {
-    
+
     private HashMap<String, DBInstance> instances;
 
     public DBServer getDBServer(String instance, int access, String pattern) {
@@ -17,20 +16,24 @@ public class DBConfig {
         return ds;
     }
 
-    public synchronized boolean reloadConfig() {
-        Ice.Communicator ic = Ice.Util.initialize();
-        Ice.ObjectPrx prx = ic.stringToProxy("M:default -h 127.0.0.1 -p 10000");
-        DBPoolServerPrx dbserver = DBPoolServerPrxHelper.uncheckedCast(prx);
+    /**
+     * 
+     * @param newConfig
+     * @return changed servers
+     */
+    public synchronized List<DBServer> reloadConfig(final Map<String, net.sinofool.dbpool.idl.DBServer[]> newConfig) {
+        List<DBServer> changes = new ArrayList<DBServer>();
         HashMap<String, DBInstance> newInstances = new HashMap<String, DBInstance>();
-        Map<String, net.sinofool.dbpool.idl.DBServer[]> newone = dbserver.getDBInstanceDict();
-        for(Entry<String, net.sinofool.dbpool.idl.DBServer[]> entry : newone.entrySet()) {
+        for (Entry<String, net.sinofool.dbpool.idl.DBServer[]> entry : newConfig.entrySet()) {
             DBInstance value = new DBInstance();
-            value.reloadConfig(entry.getValue());
+            List<DBServer> change = value.reloadConfig(entry.getValue());
+            changes.addAll(change);
             newInstances.put(entry.getKey(), value);
         }
         instances = newInstances;
-        return true;
+        return changes;
     }
+
     /**
      * @param args
      */

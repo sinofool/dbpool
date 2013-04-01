@@ -1,5 +1,6 @@
 package net.sinofool.dbpool.config;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 
 import javax.sql.DataSource;
@@ -8,10 +9,10 @@ import org.apache.commons.dbcp.BasicDataSource;
 
 public class DBSource {
 
-    private HashMap<DBServer, BasicDataSource> datasources = new HashMap<DBServer, BasicDataSource>();
+    private HashMap<Integer, BasicDataSource> datasources = new HashMap<Integer, BasicDataSource>();
 
     public DataSource getDataSource(DBServer server) {
-        BasicDataSource ds = datasources.get(server);
+        BasicDataSource ds = datasources.get(server.checksum());
         if (ds != null) {
             return ds;
         }
@@ -25,8 +26,22 @@ public class DBSource {
         ds.setMaxActive(server.maxSize);
         ds.setMinEvictableIdleTimeMillis(server.idleTimeSeconds * 1000L / 2);
 
-        datasources.put(server, ds);
+        datasources.put(server.checksum(), ds);
         return ds;
+    }
+
+    public void closeDataSource(DBServer server) {
+        BasicDataSource ds = datasources.remove(server.checksum());
+        if (ds == null) {
+            // TODO this should never happened.
+            return;
+        }
+        try {
+            ds.close();
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     /**
