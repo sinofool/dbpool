@@ -62,6 +62,8 @@ public class DBPool {
             @Override
             public void run() {
                 try {
+                	// TODO also get config after register to make sure client can get 
+                	//the change in the period of client lost connection with server 
                     serverPrx.registerClient(clientPrx);
                 } catch (Throwable e) {
                     // TODO log it.
@@ -77,7 +79,10 @@ public class DBPool {
 
     public DataSource getDataSource(String instance, int access, String pattern) {
         DBServer ds = dbconfig.getDBServer(instance, access, pattern);
-        return dbsource.getDataSource(ds);
+        if( ds != null) {
+        	return dbsource.getDataSource(ds);	
+        }
+        return null;        
     }
 
     public static void main(String[] args) throws SQLException, InterruptedException {

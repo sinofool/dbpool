@@ -69,13 +69,11 @@
 			<groupId>com.zeroc</groupId>
 			<artifactId>ice</artifactId>
 			<version>3.5.0</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/Ice-3.5.0.jar</systemPath>
 		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
-			<plugin>
+			<!--plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<version>1.7</version>
 				<executions>
@@ -95,7 +93,7 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin-->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
