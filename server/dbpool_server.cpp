@@ -190,9 +190,10 @@ bool DBPoolServerI::_reload() {
 bool DBPoolServerI::registerClient(const idl::DBPoolClientPrx& client,
 		const Ice::Current&) {
 	IceUtil::Mutex::Lock lock(_mutex_clients);
-	_clients.insert(client);
+	idl::DBPoolClientPrx poolClient = idl::DBPoolClientPrx::uncheckedCast(client->ice_timeout(300));
+	_clients.insert(poolClient);
 	DBPOOLLOG_DEBUG(
-			"Client registered " << client << " current have " << _clients.size() << " clients.");
+			"Client registered " << poolClient << " current have " << _clients.size() << " clients.");
 	return true;
 }
 }
