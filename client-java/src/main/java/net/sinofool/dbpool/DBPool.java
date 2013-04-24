@@ -53,6 +53,7 @@ public class DBPool {
         adapter = ic.createObjectAdapterWithEndpoints("DBPoolClient", "default");
         clientPrx = DBPoolClientPrxHelper.uncheckedCast(adapter.add(new DBClient(), ic.stringToIdentity("C")));
         adapter.activate();
+        // TODO add timeout to prx
         serverPrx = DBPoolServerPrxHelper.uncheckedCast(ic.stringToProxy("M:default -h 127.0.0.1 -p 10000"));
         dbconfig.reloadConfig(serverPrx.getDBInstanceDict());
         serverPrx.registerClient(clientPrx);
