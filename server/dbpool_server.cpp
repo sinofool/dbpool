@@ -26,6 +26,7 @@ void DBConfigHandler::startElement(const std::string& name,
 			_current_instance = &(ret.first->second);
 		} else {
 			// duplicate instance name exists in file;
+		  DBPOOLLOG_DEBUG("duplicate instance name = " << name << " exists in file");
 			_current_instance = NULL;
 		}
 	} else if (name == "server") {
@@ -150,8 +151,13 @@ DBPoolServerI::DBPoolServerI() {
 }
 
 idl::DBInstanceDict DBPoolServerI::getDBInstanceDict(const Ice::Current&) {
-	IceUtil::Mutex::Lock lock(_mutex_data);
-	return _data;
+  // when _data is serialized, it may cause core, so we copy _data and return the copy
+  idl::DBInstanceDict data;
+  {
+    IceUtil::Mutex::Lock lock(_mutex_data);
+    data = _data;
+  }
+	return data;
 }
 
 bool DBPoolServerI::reload(const Ice::Current&) {
@@ -160,14 +166,21 @@ bool DBPoolServerI::reload(const Ice::Current&) {
 
 bool DBPoolServerI::_reload() {
 	DBConfigHandler handle;
-	IceXML::Parser::parse("dbpool.xml", handle);
-	idl::DBInstanceDict data = handle.getDBInstanceDict();
+  
+  try {
+      IceXML::Parser::parse("dbpool.xml", handle);
+  } catch (IceXML::ParserException& e) {
+			DBPOOLLOG_DEBUG("reload xml got a parse exception " << e.what());
+      return false;
+  }
+
+  idl::DBInstanceDict data = handle.getDBInstanceDict();
 	{
 		IceUtil::Mutex::Lock lock(_mutex_data);
 		_data = data;
 	}
 
-	std::set<idl::DBPoolClientPrx> clients;
+	std::set<idl::DBPoolClientPrx, DBPoolClientPrxLessTo> clients;
 	{
 		IceUtil::Mutex::Lock lock(_mutex_clients);
 		clients = _clients;
@@ -190,10 +203,13 @@ bool DBPoolServerI::_reload() {
 bool DBPoolServerI::registerClient(const idl::DBPoolClientPrx& client,
 		const Ice::Current&) {
 	IceUtil::Mutex::Lock lock(_mutex_clients);
-	idl::DBPoolClientPrx poolClient = idl::DBPoolClientPrx::uncheckedCast(client->ice_timeout(300));
-	_clients.insert(poolClient);
+  // 1. add timeout to make sure when someone use the clientprx in a wrong way
+  // they can't hang our service
+  // 2. same client form the same prx? if not the set will have more than one prx of one client
+  // we can use prx->ice_getIdentity() to compare whether the two proxies is stands as the same client
+	_clients.insert(client->ice_timeout(300));
 	DBPOOLLOG_DEBUG(
-			"Client registered " << poolClient << " current have " << _clients.size() << " clients.");
+			"Client registered " << client << " current have " << _clients.size() << " clients.");
 	return true;
 }
 }

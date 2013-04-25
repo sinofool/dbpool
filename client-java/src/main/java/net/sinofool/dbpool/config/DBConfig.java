@@ -11,8 +11,14 @@ public class DBConfig {
     private HashMap<String, DBInstance> instances;
 
     public DBServer getDBServer(String instance, int access, String pattern) {
+    	// TODO need lock
         DBInstance db = instances.get(instance);
-        DBServer ds = db.getDbServer(access, pattern);
+        DBServer ds = null;
+        if(db != null) {
+        	ds = db.getDbServer(access, pattern);	
+        }else {
+        	// TODO log warn
+        }
         return ds;
     }
 

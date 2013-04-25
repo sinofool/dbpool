@@ -1,4 +1,5 @@
 #include "dbpool.h"
+#include <functional>
 #include <IceXML/Parser.h>
 #include <IceUtil/RecMutex.h>
 
@@ -34,6 +35,13 @@ private:
 };
 typedef IceUtil::Handle<DBConfigHandler> DBPoolHandlerPtr;
 
+struct DBPoolClientPrxLessTo: public std::binary_function<idl::DBPoolClientPrx, idl::DBPoolClientPrx, bool> 
+{
+  bool operator()(const idl::DBPoolClientPrx& __x, const idl::DBPoolClientPrx& __y) const {
+    return __x->ice_getIdentity() < __y->ice_getIdentity();
+  }
+};
+
 class DBPoolServerI: virtual public idl::DBPoolServer {
 public:
 	DBPoolServerI();
@@ -45,7 +53,7 @@ private:
 	idl::DBInstanceDict _data;
 	IceUtil::Mutex _mutex_data;
 	IceUtil::Mutex _mutex_clients;
-	std::set<idl::DBPoolClientPrx> _clients;
+	std::set<idl::DBPoolClientPrx,DBPoolClientPrxLessTo> _clients;
 };
 typedef IceUtil::Handle<DBPoolServerI> DBPoolServerIPtr;
 }
