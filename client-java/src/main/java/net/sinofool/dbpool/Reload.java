@@ -18,7 +18,9 @@ public class Reload {
 
         Ice.Communicator ic = Ice.Util.initialize();
         DBPoolServerPrx serverPrx = DBPoolServerPrxHelper.uncheckedCast(ic.stringToProxy(str.toString()));
+        System.out.println("reload start");
         serverPrx.reload();
+        System.out.println("reload done");
         ic.shutdown();
         ic.destroy();
     }
