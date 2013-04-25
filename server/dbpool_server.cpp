@@ -26,7 +26,7 @@ void DBConfigHandler::startElement(const std::string& name,
 			_current_instance = &(ret.first->second);
 		} else {
 			// duplicate instance name exists in file;
-      // add log
+		  DBPOOLLOG_DEBUG("duplicate instance name = " << name << " exists in file");
 			_current_instance = NULL;
 		}
 	} else if (name == "server") {
@@ -166,8 +166,15 @@ bool DBPoolServerI::reload(const Ice::Current&) {
 
 bool DBPoolServerI::_reload() {
 	DBConfigHandler handle;
-	IceXML::Parser::parse("dbpool.xml", handle);
-	idl::DBInstanceDict data = handle.getDBInstanceDict();
+  
+  try {
+      IceXML::Parser::parse("dbpool.xml", handle);
+  } catch (IceXML::ParserException& e) {
+			DBPOOLLOG_DEBUG("reload xml got a parse exception " << e.what());
+      return false;
+  }
+
+  idl::DBInstanceDict data = handle.getDBInstanceDict();
 	{
 		IceUtil::Mutex::Lock lock(_mutex_data);
 		_data = data;
