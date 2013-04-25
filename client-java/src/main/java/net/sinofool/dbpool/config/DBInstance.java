@@ -14,7 +14,7 @@ public class DBInstance {
     private ArrayList<DBServer> servers = new ArrayList<DBServer>();
 
     private int access(String acc) {
-        // TODO: needs more
+        // TODO needs more
         if (acc.equalsIgnoreCase("rw")) {
             return DBPool.WRITE_ACCESS | DBPool.READ_ACCESS;
         }
@@ -56,6 +56,7 @@ public class DBInstance {
             newServers.add(dbs);
         }
 
+        // TODO need better alg to get changes
         ArrayList<DBServer> changes;
         do {
             if (servers.size() != newServers.size()) {
@@ -77,6 +78,7 @@ public class DBInstance {
     public DBServer getDbServer(int access, String pattern) {
         LinkedList<DBServer> candidate = new LinkedList<DBServer>();
         int totalWeight = 0;
+        // TODO need lock 
         for (DBServer entry : servers) {
             if ((entry.access & access) == 0) {
                 continue;
@@ -84,6 +86,7 @@ public class DBInstance {
             candidate.add(entry);
             totalWeight += entry.weight;
         }
+        // TODO: need better weight alg
         int randWeight = random.nextInt(totalWeight);
         DBServer choosen = null;
         for (DBServer dbServer : candidate) {
