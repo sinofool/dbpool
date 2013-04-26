@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sinofool.dbpool.DBPool;
 
@@ -12,9 +13,12 @@ public class DBInstance {
     private Random random = new Random(System.currentTimeMillis());
 
     private ArrayList<DBServer> servers = new ArrayList<DBServer>();
+    
+    //use rwLock to make the class threadsafe, and have a better performance at the same time
+    private ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     private int access(String acc) {
-        // TODO: needs more
+        // TODO needs more
         if (acc.equalsIgnoreCase("rw")) {
             return DBPool.WRITE_ACCESS | DBPool.READ_ACCESS;
         }
@@ -56,6 +60,7 @@ public class DBInstance {
             newServers.add(dbs);
         }
 
+        // TODO need better alg to get changes
         ArrayList<DBServer> changes;
         do {
             if (servers.size() != newServers.size()) {
@@ -70,13 +75,18 @@ public class DBInstance {
             }
         } while (false);
 
+        rwLock.writeLock().lock();
         servers = newServers;
+        rwLock.writeLock().unlock();
+        
         return changes;
     }
 
     public DBServer getDbServer(int access, String pattern) {
         LinkedList<DBServer> candidate = new LinkedList<DBServer>();
         int totalWeight = 0;
+        
+        rwLock.readLock().lock();
         for (DBServer entry : servers) {
             if ((entry.access & access) == 0) {
                 continue;
@@ -84,6 +94,9 @@ public class DBInstance {
             candidate.add(entry);
             totalWeight += entry.weight;
         }
+        rwLock.readLock().unlock();
+        
+        // TODO: need better weight alg
         int randWeight = random.nextInt(totalWeight);
         DBServer choosen = null;
         for (DBServer dbServer : candidate) {

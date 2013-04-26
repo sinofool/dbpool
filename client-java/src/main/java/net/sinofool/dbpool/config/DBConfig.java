@@ -5,14 +5,33 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class DBConfig {
 
+	private static final Logger logger = LoggerFactory.getLogger(DBConfig.class);
+	
     private HashMap<String, DBInstance> instances;
+    
+    //use rwLock to make the class threadsafe, and have a better performance at the same time
+    private ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     public DBServer getDBServer(String instance, int access, String pattern) {
+    
+    	rwLock.readLock().lock();
         DBInstance db = instances.get(instance);
-        DBServer ds = db.getDbServer(access, pattern);
+        rwLock.readLock().unlock();
+        
+        DBServer ds = null;
+        if(db != null) {
+        	ds = db.getDbServer(access, pattern);	
+        }else {
+        	logger.warn("DBServer " + instance + " is null!");
+        }
         return ds;
     }
 
@@ -30,7 +49,17 @@ public class DBConfig {
             changes.addAll(change);
             newInstances.put(entry.getKey(), value);
         }
-        instances = newInstances;
+        
+        if(!changes.isEmpty()) {
+        	logger.info("New config updated");
+        	
+        	rwLock.writeLock().lock();
+            instances = newInstances;
+            rwLock.writeLock().unlock();	
+        }else {
+        	logger.debug("No new config updated");
+        }
+        
         return changes;
     }
 
