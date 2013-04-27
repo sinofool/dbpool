@@ -15,7 +15,7 @@ public class DBConfig {
 
 	private static final Logger logger = LoggerFactory.getLogger(DBConfig.class);
 	
-    private HashMap<String, DBInstance> instances;
+    private HashMap<String, DBInstance> instances = new HashMap<String, DBInstance>();
     
     //use rwLock to make the class threadsafe, and have a better performance at the same time
     private ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
@@ -44,21 +44,15 @@ public class DBConfig {
         List<DBServer> changes = new ArrayList<DBServer>();
         HashMap<String, DBInstance> newInstances = new HashMap<String, DBInstance>();
         for (Entry<String, net.sinofool.dbpool.idl.DBServer[]> entry : newConfig.entrySet()) {
-            DBInstance value = new DBInstance();
-            List<DBServer> change = value.reloadConfig(entry.getValue());
-            changes.addAll(change);
-            newInstances.put(entry.getKey(), value);
+        	DBInstance value = instances.containsKey(entry.getKey()) ? instances.get(entry.getKey()) : new DBInstance();
+        	List<DBServer> change = value.reloadConfig(entry.getValue());
+        	changes.addAll(change);
+        	newInstances.put(entry.getKey(), value);
         }
         
-        if(!changes.isEmpty()) {
-        	logger.info("New config updated");
-        	
-        	rwLock.writeLock().lock();
-            instances = newInstances;
-            rwLock.writeLock().unlock();	
-        }else {
-        	logger.debug("No new config updated");
-        }
+       	rwLock.writeLock().lock();
+        instances = newInstances;
+        rwLock.writeLock().unlock();	
         
         return changes;
     }
