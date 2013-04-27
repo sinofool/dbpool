@@ -180,7 +180,7 @@ bool DBPoolServerI::_reload() {
 		_data = data;
 	}
 
-	std::set<idl::DBPoolClientPrx, DBPoolClientPrxLessTo> clients;
+	std::set<idl::DBPoolClientPrx> clients;
 	{
 		IceUtil::Mutex::Lock lock(_mutex_clients);
 		clients = _clients;
