@@ -10,7 +10,7 @@ import org.apache.commons.dbcp.BasicDataSource;
 public class DBSource {
 
 	// use ConcurrentHashMap to make the methods are threadsafe
-    private ConcurrentHashMap<Integer, BasicDataSource> datasources = new ConcurrentHashMap<Integer, BasicDataSource>();
+    private ConcurrentHashMap<String, BasicDataSource> datasources = new ConcurrentHashMap<String, BasicDataSource>();
 
     public DataSource getDataSource(DBServer server) {
         BasicDataSource ds = datasources.get(server.checksum());
