@@ -17,7 +17,7 @@ public class DBServer {
     int weight;
     int access;
 
-    public int checksum() {
+    public String checksum() {
         StringBuffer buff = new StringBuffer();
         buff.append(driver);
         buff.append(host);
@@ -32,7 +32,7 @@ public class DBServer {
         buff.append(weight);
         buff.append(access);
 
-        return buff.toString().hashCode();
+        return buff.toString();
     }
 
     /**
