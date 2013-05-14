@@ -100,6 +100,8 @@ void DBConfigHandler::endElement(const std::string& name, int line,
 		_current_server->user = _current_value.str();
 	} else if (name == "pass") {
 		_current_server->pass = _current_value.str();
+	} else if (name == "db") {
+		_current_server->db = _current_value.str();
 	} else if (name == "coreSize") {
 		_current_server->coreSize = str2int(_current_value.str(), 1);
 	} else if (name == "maxSize") {
