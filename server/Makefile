@@ -13,7 +13,7 @@ clean :
 	rm -f dbpool_server dbpool.h dbpool.cpp *.o
 
 dbpool_server: dbpool.o dbpool_server.o main.o
-	$(CXX) $(LDFLAGS) -o $@ $^
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
 dbpool.h: ../slice/dbpool.ice
 	@echo "Generating Slice"
