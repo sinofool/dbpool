@@ -88,7 +88,7 @@ public class DBInstance {
         
         rwLock.readLock().lock();
         for (DBServer entry : servers) {
-            if ((entry.access & access) == 0) {
+            if (((entry.access & access) == 0) || (!pattern.matches(entry.expression))) {
                 continue;
             }
             candidate.add(entry);

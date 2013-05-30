@@ -2,11 +2,13 @@
 #include <functional>
 #include <IceXML/Parser.h>
 #include <IceUtil/RecMutex.h>
+#include <IceUtil/Thread.h>
 
 namespace net {
 namespace sinofool {
 namespace dbpool {
 
+const int PUSH_INTERVAL = 60 * 2;
 
 class DBConfigHandler: virtual public IceXML::Handler {
 public:
@@ -42,14 +44,16 @@ typedef IceUtil::Handle<DBConfigHandler> DBPoolHandlerPtr;
 //  }
 //};
 
-class DBPoolServerI: virtual public idl::DBPoolServer {
+class DBPoolServerI: virtual public idl::DBPoolServer , virtual public IceUtil::Thread {
 public:
 	DBPoolServerI();
 	virtual idl::DBInstanceDict getDBInstanceDict(const Ice::Current&);
 	virtual bool reload(const Ice::Current&);
 	virtual bool registerClient(const idl::DBPoolClientPrx&, const Ice::Current&);
+  virtual void run();
 private:
 	bool _reload();
+  void pushToClients();
 	idl::DBInstanceDict _data;
 	IceUtil::Mutex _mutex_data;
 	IceUtil::Mutex _mutex_clients;

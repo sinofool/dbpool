@@ -112,7 +112,7 @@ public class DBPool {
         pool.initialize(proxyStr);
 
         for (int i = 0; i < Integer.MAX_VALUE; ++i) {
-            DataSource ds = pool.getDataSource("user", READ_ACCESS, "");
+            DataSource ds = pool.getDataSource("user", READ_ACCESS, "user_1");
             QueryRunner run = new QueryRunner(ds);
             String ret = run.query("SELECT user()", new ResultSetHandler<String>() {
 
