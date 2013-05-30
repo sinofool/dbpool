@@ -19,7 +19,7 @@ public class DBSource {
         }
         ds = new BasicDataSource();
         ds.setDriverClassName(server.driver);
-        ds.setUrl("jdbc:mysql://" + server.host + ":" + server.port + "/" + server.db + "?autoReconnect=true");
+        ds.setUrl("jdbc:mysql://" + server.host + ":" + server.port + "/" + server.db + "?useUnicode=yes&characterEncoding=UTF-8&autoReconnect=true");
         ds.setUsername(server.user);
         ds.setPassword(server.pass);
         ds.setInitialSize(server.coreSize);
