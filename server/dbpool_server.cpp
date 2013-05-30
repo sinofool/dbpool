@@ -154,6 +154,7 @@ int DBConfigHandler::str2int(const std::string& str, int def) {
 
 DBPoolServerI::DBPoolServerI() {
 	_reload();
+  start().detach();
 }
 
 idl::DBInstanceDict DBPoolServerI::getDBInstanceDict(const Ice::Current&) {
@@ -186,6 +187,32 @@ bool DBPoolServerI::_reload() {
 		_data = data;
 	}
 
+  pushToClients();
+	
+  return true;
+}
+
+bool DBPoolServerI::registerClient(const idl::DBPoolClientPrx& client,
+		const Ice::Current&) {
+	IceUtil::Mutex::Lock lock(_mutex_clients);
+  // 1. add timeout to make sure when someone use the clientprx in a wrong way
+  // they can't hang our service
+  // 2. same client form the same prx? if not the set will have more than one prx of one client
+  // we can use prx->ice_getIdentity() to compare whether the two proxies is stands as the same client
+  std::pair<std::set<idl::DBPoolClientPrx>::iterator, bool> rs =_clients.insert(client->ice_timeout(300));
+	DBPOOLLOG_DEBUG(
+			"Client registered " << *(rs.first) << " current have " << _clients.size() << " clients.");
+	return true;
+}
+
+void DBPoolServerI::pushToClients() {
+  
+  idl::DBInstanceDict data;
+	{
+		IceUtil::Mutex::Lock lock(_mutex_data);
+		data = _data;
+	}
+
 	std::set<idl::DBPoolClientPrx> clients;
 	{
 		IceUtil::Mutex::Lock lock(_mutex_clients);
@@ -202,22 +229,16 @@ bool DBPoolServerI::_reload() {
 			DBPOOLLOG_DEBUG(
 					"Error push to " << (*it) << ". Current have " << _clients.size() << " clients.");
 		}
-	}
-	return true;
+  }
 }
 
-bool DBPoolServerI::registerClient(const idl::DBPoolClientPrx& client,
-		const Ice::Current&) {
-	IceUtil::Mutex::Lock lock(_mutex_clients);
-  // 1. add timeout to make sure when someone use the clientprx in a wrong way
-  // they can't hang our service
-  // 2. same client form the same prx? if not the set will have more than one prx of one client
-  // we can use prx->ice_getIdentity() to compare whether the two proxies is stands as the same client
-	_clients.insert(client->ice_timeout(300));
-	DBPOOLLOG_DEBUG(
-			"Client registered " << client << " current have " << _clients.size() << " clients.");
-	return true;
+void DBPoolServerI::run() {
+  while(true) {
+      sleep(PUSH_INTERVAL);
+      pushToClients();
+  }
 }
+
 }
 }
 }
