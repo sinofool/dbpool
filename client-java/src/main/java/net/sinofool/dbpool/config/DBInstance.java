@@ -82,19 +82,53 @@ public class DBInstance {
         return changes;
     }
 
-    public DBServer getDbServer(int access, String pattern) {
+	private int getDBServerList(int access, List<DBServer> candidate) {
+		int totalWeight = 0;
+
+		rwLock.readLock().lock();
+		for (DBServer entry : servers) {
+			if ((entry.access & access) == 0) {
+				continue;
+			}
+			candidate.add(entry);
+			totalWeight += entry.weight;
+		}
+		rwLock.readLock().unlock();
+
+		return totalWeight;
+	}
+
+	private int getDBServerList(int access, String pattern,
+			List<DBServer> candidate) {
+		int totalWeight = 0;
+
+		rwLock.readLock().lock();
+		for (DBServer entry : servers) {
+			if ((entry.access & access) == 0
+					| pattern.matches(entry.expression) == false) {
+				continue;
+			}
+			candidate.add(entry);
+			totalWeight += entry.weight;
+		}
+		rwLock.readLock().unlock();
+
+		return totalWeight;
+	}
+    
+    public DBServer getDBServer(int access, String pattern) {
         LinkedList<DBServer> candidate = new LinkedList<DBServer>();
         int totalWeight = 0;
         
-        rwLock.readLock().lock();
-        for (DBServer entry : servers) {
-            if ((entry.access & access) == 0) {
-                continue;
-            }
-            candidate.add(entry);
-            totalWeight += entry.weight;
+        if(pattern != null && !pattern.isEmpty()) {
+        	totalWeight = getDBServerList(access, pattern, candidate);
+        } else {
+        	totalWeight = getDBServerList(access, candidate);
         }
-        rwLock.readLock().unlock();
+        
+        if(totalWeight == 0) {
+        	return null;
+        }
         
         // TODO: need better weight alg
         int randWeight = random.nextInt(totalWeight);
