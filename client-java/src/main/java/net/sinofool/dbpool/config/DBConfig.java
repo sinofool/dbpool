@@ -28,7 +28,7 @@ public class DBConfig {
         
         DBServer ds = null;
         if(db != null) {
-        	ds = db.getDbServer(access, pattern);	
+        	ds = db.getDBServer(access, pattern);	
         }else {
         	logger.warn("DBServer " + instance + " is null!");
         }
