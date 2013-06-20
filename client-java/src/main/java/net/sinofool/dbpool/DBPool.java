@@ -58,7 +58,11 @@ public class DBPool {
      * @param proxy: format like "M:default -h 127.0.0.1 -p 10000"
      */
     public void initialize(String proxy) {
-        ic = Ice.Util.initialize();
+        Ice.InitializationData initData = new Ice.InitializationData();
+        initData.properties = Ice.Util.createProperties();
+        initData.properties.setProperty("Ice.IPv6", "0");
+
+        ic = Ice.Util.initialize(initData);
         adapter = ic.createObjectAdapterWithEndpoints("DBPoolClient", "default");
         clientPrx = DBPoolClientPrxHelper.uncheckedCast(adapter.add(new DBClient(), ic.stringToIdentity("C")));
         adapter.activate();
