@@ -16,3 +16,10 @@ It needs two variables: ICE_HOME LOG4CPLUS_HOME
 
 	cd server && make ICE_HOME=$HOME/build/Ice-3.5 LOG4CPLUS_HOME=$HOME/build/log4cplus_dist
 
+## Precompiled package
+I have some precompiled packages for quick start in pure java environment.
+###For CentOS6:
+dbpool_server:	http://sinofool.net/dl/dbpool_server.tar.bz2
+Ice-3.5.0:	http://sinofool.net/dl/Ice-3.5.0-binary-centos6.tar.bz2
+
+If you want package for other platform, please open a ticket in this project.
