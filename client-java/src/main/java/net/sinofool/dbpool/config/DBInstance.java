@@ -13,8 +13,9 @@ public class DBInstance {
     private Random random = new Random(System.currentTimeMillis());
 
     private ArrayList<DBServer> servers = new ArrayList<DBServer>();
-    
-    //use rwLock to make the class threadsafe, and have a better performance at the same time
+
+    // use rwLock to make the class threadsafe, and have a better performance at
+    // the same time
     private ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     private int access(String acc) {
@@ -69,7 +70,9 @@ public class DBInstance {
             }
             changes = new ArrayList<DBServer>();
             for (int i = 0; i < servers.size(); ++i) {
-                if (servers.get(i).checksum() != newServers.get(i).checksum()) {
+                String oldChecksum = servers.get(i).checksum();
+                String newChecksum = newServers.get(i).checksum();
+                if (!oldChecksum.equals(newChecksum)) {
                     changes.add(servers.get(i));
                 }
             }
@@ -78,58 +81,56 @@ public class DBInstance {
         rwLock.writeLock().lock();
         servers = newServers;
         rwLock.writeLock().unlock();
-        
+
         return changes;
     }
 
-	private int getDBServerList(int access, List<DBServer> candidate) {
-		int totalWeight = 0;
+    private int getDBServerList(int access, List<DBServer> candidate) {
+        int totalWeight = 0;
 
-		rwLock.readLock().lock();
-		for (DBServer entry : servers) {
-			if ((entry.access & access) == 0) {
-				continue;
-			}
-			candidate.add(entry);
-			totalWeight += entry.weight;
-		}
-		rwLock.readLock().unlock();
+        rwLock.readLock().lock();
+        for (DBServer entry : servers) {
+            if ((entry.access & access) == 0) {
+                continue;
+            }
+            candidate.add(entry);
+            totalWeight += entry.weight;
+        }
+        rwLock.readLock().unlock();
 
-		return totalWeight;
-	}
+        return totalWeight;
+    }
 
-	private int getDBServerList(int access, String pattern,
-			List<DBServer> candidate) {
-		int totalWeight = 0;
+    private int getDBServerList(int access, String pattern, List<DBServer> candidate) {
+        int totalWeight = 0;
 
-		rwLock.readLock().lock();
-		for (DBServer entry : servers) {
-			if ((entry.access & access) == 0
-					| pattern.matches(entry.expression) == false) {
-				continue;
-			}
-			candidate.add(entry);
-			totalWeight += entry.weight;
-		}
-		rwLock.readLock().unlock();
+        rwLock.readLock().lock();
+        for (DBServer entry : servers) {
+            if ((entry.access & access) == 0 | pattern.matches(entry.expression) == false) {
+                continue;
+            }
+            candidate.add(entry);
+            totalWeight += entry.weight;
+        }
+        rwLock.readLock().unlock();
 
-		return totalWeight;
-	}
-    
+        return totalWeight;
+    }
+
     public DBServer getDBServer(int access, String pattern) {
         LinkedList<DBServer> candidate = new LinkedList<DBServer>();
         int totalWeight = 0;
-        
-        if(pattern != null && !pattern.isEmpty()) {
-        	totalWeight = getDBServerList(access, pattern, candidate);
+
+        if (pattern != null && !pattern.isEmpty()) {
+            totalWeight = getDBServerList(access, pattern, candidate);
         } else {
-        	totalWeight = getDBServerList(access, candidate);
+            totalWeight = getDBServerList(access, candidate);
         }
-        
-        if(totalWeight == 0) {
-        	return null;
+
+        if (totalWeight == 0) {
+            return null;
         }
-        
+
         // TODO: need better weight alg
         int randWeight = random.nextInt(totalWeight);
         DBServer choosen = null;

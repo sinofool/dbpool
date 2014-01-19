@@ -1,119 +1,57 @@
 package net.sinofool.dbpool;
 
+import java.io.InputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.Properties;
 
 import javax.sql.DataSource;
 
 import net.sinofool.dbpool.config.DBConfig;
-import net.sinofool.dbpool.config.DBServer;
-import net.sinofool.dbpool.config.DBSource;
-import net.sinofool.dbpool.idl.DBPoolClientPrx;
-import net.sinofool.dbpool.idl.DBPoolClientPrxHelper;
-import net.sinofool.dbpool.idl.DBPoolServerPrx;
-import net.sinofool.dbpool.idl.DBPoolServerPrxHelper;
-import net.sinofool.dbpool.idl._DBPoolClientDisp;
 
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DBPool {
+public class DBPool implements ConfigProvider {
 
-	private static final Logger logger = LoggerFactory.getLogger(DBConfig.class);
-	
-    public static int READ_ACCESS = (1 << 0);
-    public static int WRITE_ACCESS = (1 << 1);
+    private static final Logger logger = LoggerFactory.getLogger(DBConfig.class);
 
-    @SuppressWarnings("serial")
-    private class DBClient extends _DBPoolClientDisp {
+    public static final int READ_ACCESS = (1 << 0);
+    public static final int WRITE_ACCESS = (1 << 1);
 
-        @Override
-        public boolean pushDBInstanceDict(Map<String, net.sinofool.dbpool.idl.DBServer[]> dict, Ice.Current __current) {
-        	logger.info("pushDBInstanceDict start");
-            List<DBServer> changes = dbconfig.reloadConfig(dict);
-            for (DBServer change : changes) {
-                dbsource.closeDataSource(change);
-            }
-            logger.info("pushDBInstanceDict finish");
-            return true;
+    private ConfigProvider provider;
+
+    @Override
+    public void initialize(final Properties dummy) throws Exception {
+        Properties props = new Properties();
+        InputStream in = DBPool.class.getResourceAsStream("/dbpool.properties");
+        try {
+            props.load(in);
+        } finally {
+            in.close();
         }
+
+        String providerClazz = props.getProperty("dbpool.config.provider", "net.sinofool.dbpool.ZeroCIceProvider");
+        logger.info("Initializing DBPool with provider: " + providerClazz);
+        provider = (ConfigProvider) Class.forName(providerClazz).newInstance();
+        provider.initialize(props);
     }
 
-    private DBSource dbsource = new DBSource();
-    private DBConfig dbconfig = new DBConfig();
-    private Ice.Communicator ic;
-    private Ice.ObjectAdapter adapter;
-    private DBPoolClientPrx clientPrx;
-    private DBPoolServerPrx serverPrx;
-
-    private Timer keepAliveTimer = new Timer();
-    
-    /*
-     * @param proxy: format like "M:default -h 127.0.0.1 -p 10000"
-     */
-    public void initialize(String proxy) {
-        Ice.InitializationData initData = new Ice.InitializationData();
-        initData.properties = Ice.Util.createProperties();
-        initData.properties.setProperty("Ice.IPv6", "0");
-
-        ic = Ice.Util.initialize(initData);
-        adapter = ic.createObjectAdapterWithEndpoints("DBPoolClient", "default");
-        clientPrx = DBPoolClientPrxHelper.uncheckedCast(adapter.add(new DBClient(), ic.stringToIdentity("C")));
-        adapter.activate();
- 
-        // set timeout 1000, so if the trans data is big we can still get it
-        serverPrx = DBPoolServerPrxHelper.uncheckedCast(ic.stringToProxy(proxy).ice_timeout(1000));
-        dbconfig.reloadConfig(serverPrx.getDBInstanceDict());
-        serverPrx.registerClient(clientPrx);
-
-        keepAliveTimer.scheduleAtFixedRate(new TimerTask() {
-
-            @Override
-            public void run() {
-                try {
-                	//also get config after register to make sure client can get 
-                	//the change in the period of client lost connection with server
-                	logger.debug("Run communicate with server start");
-                    serverPrx.registerClient(clientPrx);
-                    dbconfig.reloadConfig(serverPrx.getDBInstanceDict());
-                    logger.debug("Run communicate with server finish");
-                } catch (Throwable e) {
-                    logger.warn("Run communicate with server get exception " + e);
-                }
-            }
-        }, 15 * 1000L, 15 * 1000L);
-    }
-
+    @Override
     public void close() {
-        ic.shutdown();
-        ic.destroy();
+        provider.close();
     }
 
-    public DataSource getDataSource(String instance, int access, String pattern) {
-        DBServer ds = dbconfig.getDBServer(instance, access, pattern);
-        if( ds != null) {
-        	return dbsource.getDataSource(ds);	
-        }
-        return null;        
+    @Override
+    public DataSource getDataSource(final String instance, final int access, final String pattern) {
+        return provider.getDataSource(instance, access, pattern);
     }
 
-    public static void main(String[] args) throws SQLException, InterruptedException {
-    	String proxyStr = null;
-    	if(args.length == 0) {
-    		System.out.println("Use default proxy \"M:default -h 127.0.0.1 -p 10000\"," +
-    				" or you can give one in cmdline !");
-    		proxyStr = "M:default -h 127.0.0.1 -p 10000";
-    	}else {
-    		proxyStr = args[0];
-    	}
+    public static void main(String[] args) throws Exception {
         DBPool pool = new DBPool();
-        pool.initialize(proxyStr);
+        pool.initialize(null);
 
         for (int i = 0; i < Integer.MAX_VALUE; ++i) {
             DataSource ds = pool.getDataSource("user", READ_ACCESS, "user123*");
