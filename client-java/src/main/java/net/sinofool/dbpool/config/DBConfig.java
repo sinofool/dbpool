@@ -10,29 +10,26 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class DBConfig {
 
-	private static final Logger logger = LoggerFactory.getLogger(DBConfig.class);
-	
+    private static final Logger logger = LoggerFactory.getLogger(DBConfig.class);
+
     private HashMap<String, DBInstance> instances = new HashMap<String, DBInstance>();
-    
-    //use rwLock to make the class threadsafe, and have a better performance at the same time
     private ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     public DBServer getDBServer(String instance, int access, String pattern) {
-    
-    	rwLock.readLock().lock();
-        DBInstance db = instances.get(instance);
-        rwLock.readLock().unlock();
-        
-        DBServer ds = null;
-        if(db != null) {
-        	ds = db.getDBServer(access, pattern);	
-        }else {
-        	logger.warn("DBServer " + instance + " is null!");
+        DBInstance db;
+        rwLock.readLock().lock();
+        try {
+            db = instances.get(instance);
+        } finally {
+            rwLock.readLock().unlock();
         }
-        return ds;
+        if (db == null) {
+            logger.warn("DBServer " + instance + " is null!");
+            return null;
+        }
+        return db.getDBServer(access, pattern);
     }
 
     /**
@@ -40,29 +37,22 @@ public class DBConfig {
      * @param newConfig
      * @return changed servers
      */
-    public synchronized List<DBServer> reloadConfig(final Map<String, net.sinofool.dbpool.idl.DBServer[]> newConfig) {
+    public List<DBServer> reloadConfig(final Map<String, net.sinofool.dbpool.idl.DBServer[]> newConfig) {
         List<DBServer> changes = new ArrayList<DBServer>();
-        HashMap<String, DBInstance> newInstances = new HashMap<String, DBInstance>();
-        for (Entry<String, net.sinofool.dbpool.idl.DBServer[]> entry : newConfig.entrySet()) {
-        	DBInstance value = instances.containsKey(entry.getKey()) ? instances.get(entry.getKey()) : new DBInstance();
-        	List<DBServer> change = value.reloadConfig(entry.getValue());
-        	changes.addAll(change);
-        	newInstances.put(entry.getKey(), value);
+        rwLock.writeLock().lock();
+        try {
+            HashMap<String, DBInstance> newInstances = new HashMap<String, DBInstance>();
+            for (Entry<String, net.sinofool.dbpool.idl.DBServer[]> entry : newConfig.entrySet()) {
+                DBInstance value = instances.containsKey(entry.getKey()) ? instances.get(entry.getKey())
+                        : new DBInstance();
+                List<DBServer> change = value.reloadConfig(entry.getValue());
+                changes.addAll(change);
+                newInstances.put(entry.getKey(), value);
+            }
+            instances = newInstances;
+            return changes;
+        } finally {
+            rwLock.writeLock().unlock();
         }
-        
-       	rwLock.writeLock().lock();
-        instances = newInstances;
-        rwLock.writeLock().unlock();	
-        
-        return changes;
     }
-
-    /**
-     * @param args
-     */
-    public static void main(String[] args) {
-        // TODO Auto-generated method stub
-
-    }
-
 }

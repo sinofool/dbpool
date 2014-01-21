@@ -1,13 +1,13 @@
 package net.sinofool.dbpool;
 
-import java.util.Properties;
-
 import javax.sql.DataSource;
 
-public interface ConfigProvider {
-	public void initialize(final Properties props) throws Exception;
+import org.apache.commons.configuration.Configuration;
 
-	public void close();
-	
-	public DataSource getDataSource(String instance, int access, String pattern);
+public interface ConfigProvider {
+    void initialize(final Configuration props) throws Exception;
+
+    void close();
+
+    DataSource getDataSource(String instance, int access, String pattern);
 }

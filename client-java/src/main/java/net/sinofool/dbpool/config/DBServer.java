@@ -2,20 +2,20 @@ package net.sinofool.dbpool.config;
 
 public class DBServer {
 
-    String driver;
-    String host;
-    String port;
-    String db;
-    String user;
-    String pass;
+    public String driver;
+    public String host;
+    public String port;
+    public String db;
+    public String user;
+    public String pass;
 
-    int coreSize;
-    int maxSize;
-    int idleTimeSeconds;
+    public int coreSize;
+    public int maxSize;
+    public int idleTimeSeconds;
 
-    String expression;
-    int weight;
-    int access;
+    public String expression;
+    public int weight;
+    public int access;
 
     public String checksum() {
         StringBuffer buff = new StringBuffer();
@@ -34,13 +34,4 @@ public class DBServer {
 
         return buff.toString();
     }
-
-    /**
-     * @param args
-     */
-    public static void main(String[] args) {
-        // TODO Auto-generated method stub
-
-    }
-
 }

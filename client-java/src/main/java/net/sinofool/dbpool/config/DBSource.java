@@ -9,7 +9,6 @@ import org.apache.commons.dbcp.BasicDataSource;
 
 public class DBSource {
 
-	// use ConcurrentHashMap to make the methods are threadsafe
     private ConcurrentHashMap<String, BasicDataSource> datasources = new ConcurrentHashMap<String, BasicDataSource>();
 
     public DataSource getDataSource(DBServer server) {
@@ -44,13 +43,4 @@ public class DBSource {
             e.printStackTrace();
         }
     }
-
-    /**
-     * @param args
-     */
-    public static void main(String[] args) {
-        // TODO Auto-generated method stub
-
-    }
-
 }

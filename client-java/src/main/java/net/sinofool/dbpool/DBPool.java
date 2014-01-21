@@ -1,14 +1,14 @@
 package net.sinofool.dbpool;
 
-import java.io.InputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Properties;
 
 import javax.sql.DataSource;
 
 import net.sinofool.dbpool.config.DBConfig;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.slf4j.Logger;
@@ -24,16 +24,9 @@ public class DBPool implements ConfigProvider {
     private ConfigProvider provider;
 
     @Override
-    public void initialize(final Properties dummy) throws Exception {
-        Properties props = new Properties();
-        InputStream in = DBPool.class.getResourceAsStream("/dbpool.properties");
-        try {
-            props.load(in);
-        } finally {
-            in.close();
-        }
-
-        String providerClazz = props.getProperty("dbpool.config.provider", "net.sinofool.dbpool.ZeroCIceProvider");
+    public void initialize(final Configuration dummy) throws Exception {
+        PropertiesConfiguration props = new PropertiesConfiguration("dbpool.properties");
+        String providerClazz = props.getString("dbpool.config.provider", "net.sinofool.dbpool.ZeroCIceProvider");
         logger.info("Initializing DBPool with provider: " + providerClazz);
         provider = (ConfigProvider) Class.forName(providerClazz).newInstance();
         provider.initialize(props);

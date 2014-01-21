@@ -2,14 +2,10 @@ package net.sinofool.dbpool;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.sql.DataSource;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import net.sinofool.dbpool.config.DBConfig;
 import net.sinofool.dbpool.config.DBServer;
@@ -19,6 +15,10 @@ import net.sinofool.dbpool.idl.DBPoolClientPrxHelper;
 import net.sinofool.dbpool.idl.DBPoolServerPrx;
 import net.sinofool.dbpool.idl.DBPoolServerPrxHelper;
 import net.sinofool.dbpool.idl._DBPoolClientDisp;
+
+import org.apache.commons.configuration.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ZeroCIceProvider implements ConfigProvider {
 
@@ -62,7 +62,7 @@ public class ZeroCIceProvider implements ConfigProvider {
      * @param proxy: format like "M:default -h 127.0.0.1 -p 10000"
      */
     @Override
-    public void initialize(final Properties props) {
+    public void initialize(final Configuration props) {
         Ice.InitializationData initData = new Ice.InitializationData();
         initData.properties = Ice.Util.createProperties();
         initData.properties.setProperty("Ice.IPv6", "0");
@@ -72,7 +72,7 @@ public class ZeroCIceProvider implements ConfigProvider {
         clientPrx = DBPoolClientPrxHelper.uncheckedCast(adapter.add(new DBClient(), ic.stringToIdentity("C")));
         adapter.activate();
 
-        String proxy = props.getProperty("dbpool.provider.zerocice.proxy", "M:default -h 127.0.0.1 -p 10000");
+        String proxy = props.getString("dbpool.provider.zerocice.proxy", "M:default -h 127.0.0.1 -p 10000");
         logger.info("Connecting to " + proxy);
 
         // set timeout 1000, so if the trans data is big we can still get it

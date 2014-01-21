@@ -13,9 +13,6 @@ public class DBInstance {
     private Random random = new Random(System.currentTimeMillis());
 
     private ArrayList<DBServer> servers = new ArrayList<DBServer>();
-
-    // use rwLock to make the class threadsafe, and have a better performance at
-    // the same time
     private ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     private int access(String acc) {
@@ -39,7 +36,7 @@ public class DBInstance {
         return type;
     }
 
-    public synchronized List<DBServer> reloadConfig(net.sinofool.dbpool.idl.DBServer[] sers) {
+    public List<DBServer> reloadConfig(net.sinofool.dbpool.idl.DBServer[] sers) {
         ArrayList<DBServer> newServers = new ArrayList<DBServer>();
         for (net.sinofool.dbpool.idl.DBServer ser : sers) {
             DBServer dbs = new DBServer();
@@ -63,10 +60,11 @@ public class DBInstance {
 
         // TODO need better alg to get changes
         ArrayList<DBServer> changes;
-        do {
+        rwLock.writeLock().lock();
+        try {
             if (servers.size() != newServers.size()) {
                 changes = servers;
-                break;
+                return changes;
             }
             changes = new ArrayList<DBServer>();
             for (int i = 0; i < servers.size(); ++i) {
@@ -76,12 +74,10 @@ public class DBInstance {
                     changes.add(servers.get(i));
                 }
             }
-        } while (false);
-
-        rwLock.writeLock().lock();
-        servers = newServers;
-        rwLock.writeLock().unlock();
-
+        } finally {
+            servers = newServers;
+            rwLock.writeLock().unlock();
+        }
         return changes;
     }
 
@@ -143,13 +139,4 @@ public class DBInstance {
         }
         return choosen;
     }
-
-    /**
-     * @param args
-     */
-    public static void main(String[] args) {
-        // TODO Auto-generated method stub
-
-    }
-
 }

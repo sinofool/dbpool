@@ -12,17 +12,17 @@
 	</properties>
 	<repositories>
 		<repository>
-			<id>lib</id>
-			<name>lib</name>
+			<id>zeroc-nexus-releases</id>
+			<name>ZeroC public repository</name>
 			<releases>
 				<enabled>true</enabled>
-				<checksumPolicy>ignore</checksumPolicy>
+				<checksumPolicy>fail</checksumPolicy>
 			</releases>
 			<snapshots>
-				<enabled>true</enabled>
+				<enabled>false</enabled>
 				<checksumPolicy>ignore</checksumPolicy>
 			</snapshots>
-			<url>file://${project.basedir}/lib</url>
+			<url>http://www.zeroc.com:8081/nexus/content/repositories/releases/</url>
 		</repository>
 	</repositories>
 	<dependencies>
@@ -62,6 +62,11 @@
 			<artifactId>commons-dbutils</artifactId>
 			<version>1.5</version>
 		</dependency>
+		<dependency>
+			<groupId>commons-configuration</groupId>
+			<artifactId>commons-configuration</artifactId>
+			<version>1.10</version>
+		</dependency>
 		<!-- start test dependencies -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -79,7 +84,7 @@
 		<dependency>
 			<groupId>com.zeroc</groupId>
 			<artifactId>ice</artifactId>
-			<version>3.5.0</version>
+			<version>3.5.1</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -94,9 +99,9 @@
 							<target>
 								<taskdef name="slice2java" classpath="${project.basedir}/lib/ant-ice.jar"
 									classname="Slice2JavaTask" />
-								<mkdir dir="src/main/generated" />
+								<mkdir dir="target/generated" />
 								<slice2java translator="${env.ICE_HOME}/bin/slice2java"
-									outputdir="src/main/generated">
+									outputdir="target/generated">
 									<fileset dir="../slice" includes="dbpool.ice" />
 								</slice2java>
 							</target>
@@ -110,6 +115,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>1.8</version>
 				<executions>
 					<execution>
 						<phase>generate-sources</phase>
@@ -118,7 +124,7 @@
 						</goals>
 						<configuration>
 							<sources>
-								<source>src/main/generated</source>
+								<source>target/generated</source>
 							</sources>
 						</configuration>
 					</execution>
@@ -134,6 +140,18 @@
 					<threshold>Low</threshold>
 					<xmlOutput>true</xmlOutput>
 				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>3.0.1</version>
 				<executions>
 					<execution>
 						<goals>
