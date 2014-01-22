@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.regex.Pattern;
 
 import net.sinofool.dbpool.DBPool;
 
@@ -99,10 +100,13 @@ public class DBInstance {
 
     private int getDBServerList(int access, String pattern, List<DBServer> candidate) {
         int totalWeight = 0;
-
+        Pattern objPattern = Pattern.compile(pattern);
         rwLock.readLock().lock();
         for (DBServer entry : servers) {
-            if ((entry.access & access) == 0 | pattern.matches(entry.expression) == false) {
+            if ((entry.access & access) == 0) {
+                continue;
+            }
+            if (!objPattern.matcher(entry.expression).find()) {
                 continue;
             }
             candidate.add(entry);

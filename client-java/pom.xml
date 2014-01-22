@@ -5,8 +5,33 @@
 	<artifactId>dbpool</artifactId>
 	<version>1.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
-	<name>Database Pool Java</name>
-	<description>This is Database connection util for Java</description>
+	<name>Managed Database Connection Pool</name>
+	<description>This is database connection tools, which offer online change of configuration.</description>
+	<url>http://sinofool.net/dbpool</url>
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>http://opensource.org/licenses/MIT</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<scm>
+		<url>https://github.com/sinofool/dbpool</url>
+		<connection>scm:git:git@github.com:sinofool/dbpool.git</connection>
+		<developerConnection>scm:git:git@github.com:sinofool/dbpool.git</developerConnection>
+	</scm>
+	<developers>
+		<developer>
+			<id>sinofool</id>
+			<name>Bochun Bai</name>
+			<email>bbc@sinofool.net</email>
+		</developer>
+	</developers>
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
+	</parent>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -131,6 +156,14 @@
 				</executions>
 			</plugin>
 			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>1.5</source>
+					<target>1.5</target>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>findbugs-maven-plugin</artifactId>
 				<version>2.5.2</version>
@@ -149,14 +182,36 @@
 				</executions>
 			</plugin>
 			<plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-pmd-plugin</artifactId>
-        <version>3.0.1</version>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-pmd-plugin</artifactId>
+				<version>3.0.1</version>
+				<configuration>
+					<linkXref>true</linkXref>
+					<sourceEncoding>utf-8</sourceEncoding>
+					<minimumTokens>100</minimumTokens>
+					<targetJdk>1.5</targetJdk>
+					<excludeRoots>
+						<excludeRoot>target/generated/</excludeRoot>
+					</excludeRoots>
+				</configuration>
 				<executions>
 					<execution>
+						<id>pmd</id>
 						<goals>
 							<goal>check</goal>
 						</goals>
+						<configuration>
+							<excludeFromFailureFile>pmd-exclude.properties</excludeFromFailureFile>
+						</configuration>
+					</execution>
+					<execution>
+						<id>cpd</id>
+						<goals>
+							<goal>cpd-check</goal>
+						</goals>
+						<configuration>
+							<excludeFromFailureFile>cpd-exclude.properties</excludeFromFailureFile>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>

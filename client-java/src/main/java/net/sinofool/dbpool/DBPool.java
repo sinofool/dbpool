@@ -53,8 +53,8 @@ public class DBPool implements ConfigProvider {
 
                 @Override
                 public String handle(ResultSet rs) throws SQLException {
-                    while (rs.next()) {
-                        return (rs.getString(1));
+                    if (rs.next()) {
+                        return rs.getString(1);
                     }
                     return "Empty";
                 }

@@ -3,6 +3,16 @@
 
 This is a system for easy management Database Connection for Java development
 
+## USAGE
+### Maven dependency
+Use following dependency in your project:
+<pre>
+&lt;dependency&gt;
+    &lt;groupId&gt;net.sinofool&lt;/groupId&gt;
+    &lt;artifactId&gt;dbpool&lt;/artifactId&gt;
+    &lt;version&gt;1.1&lt;/version&gt;
+&lt;/dependency&gt;
+</pre>
 ## INSTALL
 
 ### Java Client
