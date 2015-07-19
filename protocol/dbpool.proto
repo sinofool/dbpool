@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+message DBServer {
+	string type = 1;
+	string host = 2; 
+	string port = 3;
+	string db = 4;
+	string user = 5;
+	string pass = 6;
+
+	uint32 coreSize = 7;
+	uint32 maxSize = 8;
+	uint32 idleTimeSeconds = 9;
+    
+	string expression = 10;
+	uint32 weight = 11;
+	string access = 12;
+}
+
+message DBInstance {
+	repeated DBServer servers = 1;
+}
+
+message DBPool {
+	map<string, DBInstance> instances = 1;
+}
+
