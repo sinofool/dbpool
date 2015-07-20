@@ -1,0 +1,35 @@
+
+buildscript {
+  repositories {
+    maven {
+      url 'https://repo.zeroc.com/nexus/content/repositories/releases'
+    }
+  }
+  dependencies {
+    classpath 'com.zeroc.gradle.ice-builder:slice:1.0.2'
+  }
+}
+
+apply plugin: 'java'
+apply plugin: 'slice'
+slice{java{}}
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+  maven {
+    url "https://repo.zeroc.com/nexus/content/repositories/releases"
+  }
+}
+
+dependencies {
+  compile 'com.zeroc:ice:3.6.0'
+  compile 'org.slf4j:jcl-over-slf4j:1.6.6'
+  compile 'org.slf4j:slf4j-api:1.6.6'
+  compile 'log4j:log4j:1.2.17'
+  compile 'mysql:mysql-connector-java:5.1.18'
+  compile 'commons-dbcp:commons-dbcp:1.4'
+  compile 'commons-dbutils:commons-dbutils:1.5'
+  compile 'commons-configuration:commons-configuration:1.10'
+}
+
