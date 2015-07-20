@@ -11,6 +11,10 @@ buildscript {
 }
 
 apply plugin: 'java'
+
+apply plugin: 'findbugs'
+findbugs.excludeFilter=file('findbugs-exclude.xml')
+
 apply plugin: 'slice'
 slice{java{}}
 

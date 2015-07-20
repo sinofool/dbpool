@@ -1,7 +1,6 @@
-client-java/.classpath
-client-java/.project
-client-java/src/main/generated/
-client-java/target/
+.classpath
+.project
+build/
 server/dbpool.h
 server/dbpool.cpp
 *.o
