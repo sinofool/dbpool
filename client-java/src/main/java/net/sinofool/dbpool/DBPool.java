@@ -8,7 +8,6 @@ import javax.sql.DataSource;
 import net.sinofool.dbpool.config.DBConfig;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.slf4j.Logger;
@@ -24,8 +23,9 @@ public class DBPool implements ConfigProvider {
     private ConfigProvider provider;
 
     @Override
-    public void initialize(final Configuration dummy) throws Exception {
-        PropertiesConfiguration props = new PropertiesConfiguration("dbpool.properties");
+    public void initialize(final Configuration props) throws Exception {
+        // Please load the local properties file like this:
+        // PropertiesConfiguration props = new PropertiesConfiguration("dbpool.properties");
         String providerClazz = props.getString("dbpool.config.provider", "net.sinofool.dbpool.ZeroCIceProvider");
         logger.info("Initializing DBPool with provider: " + providerClazz);
         provider = (ConfigProvider) Class.forName(providerClazz).newInstance();

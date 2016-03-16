@@ -99,17 +99,26 @@
 			<version>4.8.1</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- protocol buff -->
+		<!-- rabbitmq client for RabbitMQProvider -->
+		<dependency>
+			<groupId>com.rabbitmq</groupId>
+			<artifactId>amqp-client</artifactId>
+			<version>3.4.4</version>
+			<scope>compile</scope>
+		</dependency>
+		<!-- protocol buff for ZooKeeperProvider -->
 		<dependency>
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java</artifactId>
 			<version>2.4.1</version>
+			<scope>compile</scope>
 		</dependency>
-		<!-- protocol buff -->
+		<!-- ICE for ZeroCIceProvider -->
 		<dependency>
 			<groupId>com.zeroc</groupId>
 			<artifactId>ice</artifactId>
 			<version>3.5.1</version>
+			<scope>compile</scope>
 		</dependency>
 	</dependencies>
 	<build>
@@ -159,8 +168,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.1</version>
 				<configuration>
-					<source>1.5</source>
-					<target>1.5</target>
+					<source>1.6</source>
+					<target>1.6</target>
 				</configuration>
 			</plugin>
 			<plugin>
